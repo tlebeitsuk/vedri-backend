@@ -1,26 +1,22 @@
 const express = require('express')
-app = express()
-port = process.env.PORT || 5000
-
 const cors = require('cors')
-app.use(cors())
-
-const addHours = require('date-fns/addHours')
-startOfHour = require('date-fns/startOfHour')
-
 const { getDataSMHI, parseDataSMHI } = require('./lib/smhi')
 const { getDataYR, parseDataYR } = require('./lib/yr')
 const { getDataFMI, parseDataFMI } = require('./lib/fmi')
+const addHours = require('date-fns/addHours')
+const startOfHour = require('date-fns/startOfHour')
+
+app = express()
 
 app.get('/forecast/lat/:lat/lon/:lon', async (req, res) => {
   const dataSMHI = await getDataSMHI(req.params.lat, req.params.lon)
-  dataYR = await getDataYR(req.params.lat, req.params.lon)
-  dataFMI = await getDataFMI(req.params.lat, req.params.lon)
+  const dataYR = await getDataYR(req.params.lat, req.params.lon)
+  const dataFMI = await getDataFMI(req.params.lat, req.params.lon)
 
   let result = {}
 
-  // forecast for 48 hours
-  for (let i = 1; i < 49; i++) {
+  // forecast for the next 24 hours
+  for (let i = 1; i <= 25; i++) {
     const time = addHours(startOfHour(new Date()), i)
 
     result[i] = {
@@ -46,7 +42,9 @@ const errorHandler = (error, req, res, next) => {
   })
 }
 
+app.use(cors())
 app.use(notFound)
 app.use(errorHandler)
 
-app.listen(port, () => console.log('Server is up and listening on port', port))
+port = process.env.PORT || 5000
+app.listen(port, () => console.log('Server is up and running on port', port))
